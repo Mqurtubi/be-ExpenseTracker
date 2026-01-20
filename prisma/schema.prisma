@@ -1,9 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
+// =======================
+// Generator & Datasource
+// =======================
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -13,39 +10,178 @@ datasource db {
   provider = "mysql"
 }
 
+//
+// =======================
+// MODELS
+// =======================
+//
+
 model User {
-  id BigInt @id @default(autoincrement()) @db.UnsignedBigInt
-  name String
-  email String @unique
-  password_hash String
-  created_at DateTime @default(now())
-  updated_at DateTime @UpdatedAt
+  id             BigInt @id @default(autoincrement()) @db.UnsignedBigInt
+  name           String
+  email          String @unique
+  password_hash  String
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  // back relations
+  categories     Category[]
+  budgets        Budget[]
+  transactions   Transaction[]
+  recurringRules RecurringRule[]
+  attachments    Attachment[]
 
   @@map("users")
 }
 
-model Category{
-  id BigInt @id @default(autoincrement()) @db.UnsignedBigInt
-  name String
-  type Type @default(EXPENSE)
-  icon? String
-  color String
-  is_default Boolean @default(false)
-  created_at DateTime @default(now())
-  updated_at DateTime @UpdatedAt
+model Category {
+  id          BigInt        @id @default(autoincrement()) @db.UnsignedBigInt
+  name        String
+  type        CategoryType @default(EXPENSE)
+  icon        String?
+  color       String?
+  is_default  Boolean      @default(false)
+  created_at  DateTime     @default(now())
+  updated_at  DateTime     @updatedAt
 
-  user_id? String
+  user_id     BigInt?       @db.UnsignedBigInt
+  user        User?         @relation(fields: [user_id], references: [id])
 
-  user User @relation(fields:[user_id], references:[id])
+  // back relations
+  budgets        Budget[]
+  transactions   Transaction[]
+  recurringRules RecurringRule[]
 
   @@index([user_id])
-
   @@map("categories")
 }
 
-enum Type{
+model Budget {
+  id           BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  month        Int      @db.TinyInt
+  year         Int      @db.SmallInt
+  amount       Decimal  @db.Decimal(15, 2)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  user_id      BigInt   @db.UnsignedBigInt
+  category_id  BigInt   @db.UnsignedBigInt
+
+  user         User     @relation(fields: [user_id], references: [id])
+  category     Category @relation(fields: [category_id], references: [id])
+
+  @@unique([user_id, category_id, month, year])
+  @@index([user_id])
+  @@index([category_id])
+  @@map("budgets")
+}
+
+model RecurringRule {
+  id            BigInt          @id @default(autoincrement()) @db.UnsignedBigInt
+  type          TypeTransaction
+  amount        Decimal         @db.Decimal(15, 2)
+  currency      String          @db.Char(3) @default("IDR")
+
+  interval_unit IntervalUnit
+  day_of_week   Int?            @db.TinyInt
+  day_of_month  Int?            @db.TinyInt
+
+  start_date    DateTime        @db.Date
+  end_date      DateTime?       @db.Date
+  next_run_at   DateTime?
+  note          String?
+
+  is_active     Boolean         @default(true)
+  created_at    DateTime        @default(now())
+  updated_at    DateTime        @updatedAt
+
+  user_id       BigInt          @db.UnsignedBigInt
+  category_id   BigInt          @db.UnsignedBigInt
+
+  user          User            @relation(fields: [user_id], references: [id])
+  category      Category        @relation(fields: [category_id], references: [id])
+
+  @@index([user_id])
+  @@index([category_id])
+  @@index([is_active, next_run_at])
+  @@map("recurring_rules")
+}
+
+model Transaction {
+  id               BigInt          @id @default(autoincrement()) @db.UnsignedBigInt
+  type             TypeTransaction
+  amount           Decimal         @db.Decimal(15, 2)
+  currency         String          @db.Char(3) @default("IDR")
+
+  transaction_date DateTime        @db.Date
+  payment_method   PaymentMethod?
+  note             String?
+
+  created_at       DateTime        @default(now())
+  updated_at       DateTime        @updatedAt
+  deleted_at       DateTime?
+
+  user_id          BigInt          @db.UnsignedBigInt
+  category_id      BigInt          @db.UnsignedBigInt
+
+  user             User            @relation(fields: [user_id], references: [id])
+  category         Category        @relation(fields: [category_id], references: [id])
+
+  attachments      Attachment[]
+
+  @@index([user_id, transaction_date])
+  @@index([type])
+  @@index([deleted_at])
+  @@map("transactions")
+}
+
+model Attachment {
+  id              BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  file_url        String
+  file_name       String
+  mime_type       String?
+  file_size       Int?     @db.UnsignedInt
+  created_at      DateTime @default(now())
+
+  user_id         BigInt   @db.UnsignedBigInt
+  transaction_id  BigInt   @db.UnsignedBigInt
+
+  user            User        @relation(fields: [user_id], references: [id])
+  transaction     Transaction @relation(fields: [transaction_id], references: [id])
+
+  @@index([transaction_id])
+  @@map("attachments")
+}
+
+//
+// =======================
+// ENUMS
+// =======================
+//
+
+enum CategoryType {
   INCOME
   EXPENSE
   BOTH
 }
 
+enum TypeTransaction {
+  INCOME
+  EXPENSE
+}
+
+enum IntervalUnit {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  DEBIT_CARD
+  CREDIT_CARD
+  EWALLET
+  OTHER
+}
