@@ -12,3 +12,40 @@ generator client {
 datasource db {
   provider = "mysql"
 }
+
+model User {
+  id BigInt @id @default(autoincrement()) @db.UnsignedBigInt
+  name String
+  email String @unique
+  password_hash String
+  created_at DateTime @default(now())
+  updated_at DateTime @UpdatedAt
+
+  @@map("users")
+}
+
+model Category{
+  id BigInt @id @default(autoincrement()) @db.UnsignedBigInt
+  name String
+  type Type @default(EXPENSE)
+  icon? String
+  color String
+  is_default Boolean @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @UpdatedAt
+
+  user_id? String
+
+  user User @relation(fields:[user_id], references:[id])
+
+  @@index([user_id])
+
+  @@map("categories")
+}
+
+enum Type{
+  INCOME
+  EXPENSE
+  BOTH
+}
+
