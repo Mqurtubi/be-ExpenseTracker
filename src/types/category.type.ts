@@ -3,6 +3,7 @@ interface CreateCategory {
   type: "EXPENSE" | "INCOME" | "BOTH";
   icon?: string;
   color?: string;
+  is_default: boolean;
 }
 
 interface UpdateCategory {
@@ -10,9 +11,10 @@ interface UpdateCategory {
   type?: "EXPENSE" | "INCOME" | "BOTH";
   icon?: string;
   color?: string;
+  is_default?: boolean;
 }
 
-interface ListCategoryQuery{
+interface ListCategoryQuery {
   type?: "EXPENSE" | "INCOME" | "BOTH" | undefined;
 }
 export type { CreateCategory, UpdateCategory, ListCategoryQuery };
