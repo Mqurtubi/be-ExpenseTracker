@@ -12,4 +12,7 @@ interface UpdateCategory {
   color?: string;
 }
 
-export type { CreateCategory, UpdateCategory };
+interface ListCategoryQuery{
+  type?: "EXPENSE" | "INCOME" | "BOTH" | undefined;
+}
+export type { CreateCategory, UpdateCategory, ListCategoryQuery };
