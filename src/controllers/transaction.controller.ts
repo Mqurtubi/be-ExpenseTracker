@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { transactionService } from "../services/transaction.service.js";
 import { parseTransactionType } from "../types/parseTranasactionType.js";
+import { ApiError } from "../utils/ApiError.js";
 
 const createTransaction = async (
   req: Request,
@@ -59,4 +60,22 @@ const listTransaction = async (
     next(error);
   }
 };
-export { createTransaction, listTransaction };
+
+const deleteTransaction = async (req:Request,res:Response,next:NextFunction)=>{
+  try {
+    const userId = req.user.sub
+    const rawTransactionId = req.params.id
+    if(typeof rawTransactionId !== "string"){
+      throw new ApiError(400, "Invalid transaction id")
+    }
+    const transactionId = BigInt(rawTransactionId)
+
+    await transactionService.softDelete(userId,transactionId)
+    return res.json({
+      message:"transaction deleted"
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+export { createTransaction, listTransaction, deleteTransaction };
