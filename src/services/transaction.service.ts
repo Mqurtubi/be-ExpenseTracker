@@ -56,4 +56,23 @@ export const transactionService = {
       },
     });
   },
+  async softDelete(userId:bigint, transactionId:bigint){
+    const tx = await prisma.transaction.findFirst({
+      where:{
+        id:transactionId,
+        user_id:userId,
+        deleted_at:null
+      }
+    })
+    if(!tx){
+      throw new ApiError(404,"Transaction not found")
+    }
+    await prisma.transaction.update({
+      where:{id:transactionId},
+      data:{
+        deleted_at:new Date(),
+      }
+    })
+    return true
+  }
 };
