@@ -104,4 +104,56 @@ export const budgetService = {
       where: { id: budgetId },
     });
   },
+  async budgetVsActual(userId: bigint, month: number, year: number) {
+    if (month < 1 || month > 12) {
+      throw new ApiError(400, "invalid month");
+    }
+
+    const budgets = await prisma.budget.findMany({
+      where: { user_id: userId, month: month, year: year },
+      include: { category: { select: { id: true, name: true } } },
+    });
+
+    const expense = await prisma.transaction.groupBy({
+      by: ["category_id"],
+      where: {
+        user_id: userId,
+        type: "EXPENSE",
+        deleted_at: null,
+        transaction_date: {
+          gte: new Date(year, month - 1, 1),
+          lte: new Date(year, month, 1),
+        },
+      },
+      _sum: {
+        amount: true,
+      },
+    });
+
+    const expenseMap = new Map<string, number>();
+    expense.forEach((e) => {
+      expenseMap.set(e.category_id.toString(), Number(e._sum.amount || 0));
+    });
+
+    return budgets.map((b) => {
+      const spent = expenseMap.get(b.category_id.toString()) || 0;
+      const budgetAmount = Number(b.amount);
+      const remaining = budgetAmount - spent;
+      const percentage = Math.min(
+        Math.round((spent * budgetAmount) / 100),
+        100,
+      );
+      return {
+        category: {
+          id: b.category.id.toString(),
+          name: b.category.name,
+        },
+        budget: budgetAmount,
+        spent,
+        remaining,
+        percentage,
+        is_over_budget: spent > budgetAmount,
+      };
+    });
+  },
 };
