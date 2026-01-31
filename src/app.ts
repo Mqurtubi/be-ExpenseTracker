@@ -7,6 +7,7 @@ import authRouter from "./routes/auth.route.js";
 import transactionRouter from "./routes/transaction.route.js";
 import categoryRouter from "./routes/cateogry.route.js";
 import budgetRouter from "./routes/budget.route.js";
+import dashboardRouter from "./routes/dashboard.route.js";
 const app = express();
 
 app.use(
@@ -25,6 +26,7 @@ app.use("/auth", authRouter);
 app.use("/transaction", transactionRouter);
 app.use("/category", categoryRouter);
 app.use("/budget", budgetRouter);
+app.use("/dashboard", dashboardRouter);
 
 app.use(errorHandler);
 
