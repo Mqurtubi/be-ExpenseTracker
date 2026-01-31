@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { auth } from "../middlewares/auth.middleware.js";
 import {
+  budgetSummary,
   createBudget,
   deleteBudget,
   listBudget,
@@ -15,4 +16,5 @@ router.post("/", createBudget);
 router.get("/", listBudget);
 router.put("/:id", updateBudget);
 router.delete("/:id", deleteBudget);
+router.get("/summary",budgetSummary)
 export default router;
