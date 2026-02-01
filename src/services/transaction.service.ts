@@ -172,11 +172,17 @@ export const transactionService = {
       amount: Number(r._sum.amount || 0),
     }));
   },
-  async recent(userId: bigint, limit = 5) {
+  async recent(userId: bigint, month: number, year: number, limit = 5) {
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59);
     const transactions = await prisma.transaction.findMany({
       where: {
         user_id: userId,
         deleted_at: null,
+        transaction_date: {
+          gte: startDate,
+          lt: endDate,
+        },
       },
       orderBy: {
         transaction_date: "desc",

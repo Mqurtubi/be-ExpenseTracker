@@ -7,7 +7,7 @@ export const dashboardService = {
       transactionService.summary(userId, month, year),
       budgetService.budgetVsActual(userId, month, year),
       transactionService.expenseByCategory(userId, month, year),
-      transactionService.recent(userId),
+      transactionService.recent(userId, month, year),
     ]);
 
     const totalBudget = bugdets.reduce((a, b) => a + b.budget, 0);
