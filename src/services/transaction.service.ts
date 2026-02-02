@@ -30,7 +30,7 @@ export const transactionService = {
     const { month, year, category_id, search, sort = "desc", type } = query;
 
     const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0, 23, 59, 59);
+    const endDate = new Date(year, month, 1);
 
     return prisma.transaction.findMany({
       where: {
@@ -84,7 +84,7 @@ export const transactionService = {
       throw new ApiError(400, "invalid year");
     }
     const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0, 23, 59, 59);
+    const endDate = new Date(year, month, 1);
     const [incomeAgg, expenseAgg] = await Promise.all([
       prisma.transaction.aggregate({
         where: {
@@ -132,7 +132,13 @@ export const transactionService = {
       throw new ApiError(400, "invalid year");
     }
     const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0, 23, 59, 59);
+    const endDate = new Date(year, month, 1);
+    console.log("RECENT SERVICE HIT", {
+      month,
+      year,
+      startDate,
+      endDate,
+    });
 
     const result = await prisma.transaction.groupBy({
       by: ["category_id"],
@@ -173,8 +179,8 @@ export const transactionService = {
     }));
   },
   async recent(userId: bigint, month: number, year: number, limit = 5) {
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0, 23, 59, 59);
+    const startDate = new Date(Date.UTC(year, month - 1, 1));
+    const endDate = new Date(Date.UTC(year, month, 1));
     const transactions = await prisma.transaction.findMany({
       where: {
         user_id: userId,
@@ -203,7 +209,7 @@ export const transactionService = {
       amount: Number(transaction.amount),
       date: transaction.transaction_date,
       note: transaction.note,
-      categoty: {
+      category: {
         id: transaction.category.id.toString(),
         name: transaction.category.name,
       },
