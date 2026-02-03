@@ -165,16 +165,20 @@ export const transactionService = {
       select: {
         id: true,
         name: true,
+        color: true,
       },
     });
 
     const categoryMap = new Map(
       categories.map((c) => [c.id.toString(), c.name]),
     );
-
+    const categoryColorMap = new Map(
+      categories.map((c) => [c.id.toString(), c.color]),
+    );
     return result.map((r) => ({
       category_id: r.category_id.toString(),
       category_name: categoryMap.get(r.category_id.toString() || "Unknown"),
+      category_color: categoryColorMap.get(r.category_id.toString()),
       amount: Number(r._sum.amount || 0),
     }));
   },

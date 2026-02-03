@@ -5,6 +5,7 @@ import type {
 } from "../types/category.type.js";
 import { ApiError } from "../utils/ApiError.js";
 import { prisma } from "../config/prisma.js";
+import { randomColor } from "../utils/randomColors.js";
 export const categoryService = {
   async create(userId: bigint, data: CreateCategory) {
     const isDefault = data.is_default === true;
@@ -13,7 +14,7 @@ export const categoryService = {
         name: data.name,
         type: data.type,
         ...(data.icon && { icon: data.icon }),
-        ...(data.color && { color: data.color }),
+        color: data.color ?? randomColor() ?? null,
         user_id: userId,
         is_default: isDefault,
       },

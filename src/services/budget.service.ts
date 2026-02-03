@@ -122,7 +122,7 @@ export const budgetService = {
         deleted_at: null,
         transaction_date: {
           gte: new Date(year, month - 1, 1),
-          lte: new Date(year, month, 1),
+          lt: new Date(year, month, 1),
         },
       },
       _sum: {
@@ -140,7 +140,7 @@ export const budgetService = {
       const budgetAmount = Number(b.amount);
       const remaining = budgetAmount - spent;
       const percentage = Math.min(
-        Math.round((spent * budgetAmount) / 100),
+        Math.round((spent / budgetAmount) * 100),
         100,
       );
       return {
