@@ -42,11 +42,12 @@ export const transactionService = {
         },
         ...(type && { type }),
         ...(category_id && { category_id: BigInt(category_id) }),
-        ...(search && { note: { contains: search } }),
+        ...(search && { note: { contains: search.toLowerCase() }, category:{name:{contains:search.toLowerCase()}} }),
       },
-      orderBy: {
-        transaction_date: sort,
-      },
+      orderBy: [
+        {transaction_date: sort},
+        {amount:sort}
+      ],
       include: {
         category: {
           select: {
