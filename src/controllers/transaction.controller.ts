@@ -33,15 +33,32 @@ const listTransaction = async (
   try {
     const userId = req.user.sub;
     const type = parseTransactionType(req.query.type);
-    const category_id = parseTransactionType(req.query.category_id);
-    const search = parseTransactionType(req.query.search);
+    const rawCategoryId =
+      typeof req.query.category_id === "string"
+        ? req.query.category_id
+        : undefined;
+
+    const category_id =
+      rawCategoryId && !Number.isNaN(Number(rawCategoryId))
+        ? Number(rawCategoryId)
+        : undefined;
+
+    const search =
+      typeof req.query.search === "string"
+        ? req.query.search.trim()
+        : undefined;
+    const sort_by =
+      req.query.sort_by === "amount" ? "amount" : "transaction_date";
+
+    const sort_dir = req.query.sort_dir === "asc" ? "asc" : "desc";
     const data = await transactionService.list(userId, {
       month: Number(req.query.month),
       year: Number(req.query.year),
       type,
-      category_id,
+      category_id: category_id,
       search,
-      sort: req.query.sort === "asc" ? "asc" : "desc",
+      sort_by,
+      sort_dir,
     });
     return res.json({
       data: data.map((tx) => ({
@@ -61,21 +78,25 @@ const listTransaction = async (
   }
 };
 
-const deleteTransaction = async (req:Request,res:Response,next:NextFunction)=>{
+const deleteTransaction = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
-    const userId = req.user.sub
-    const rawTransactionId = req.params.id
-    if(typeof rawTransactionId !== "string"){
-      throw new ApiError(400, "Invalid transaction id")
+    const userId = req.user.sub;
+    const rawTransactionId = req.params.id;
+    if (typeof rawTransactionId !== "string") {
+      throw new ApiError(400, "Invalid transaction id");
     }
-    const transactionId = BigInt(rawTransactionId)
+    const transactionId = BigInt(rawTransactionId);
 
-    await transactionService.softDelete(userId,transactionId)
+    await transactionService.softDelete(userId, transactionId);
     return res.json({
-      message:"transaction deleted"
-    })
+      message: "transaction deleted",
+    });
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 export { createTransaction, listTransaction, deleteTransaction };

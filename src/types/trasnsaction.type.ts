@@ -18,7 +18,10 @@ interface Query {
   year: number;
   search?: string | undefined;
   type?: "INCOME" | "EXPENSE" | undefined;
-  category_id?: string | undefined;
-  sort?: "asc" | "desc" | undefined;
+  category_id?: number | undefined;
+  sort_by: Sort_by;
+  sort_dir: sort_dir;
 }
+type Sort_by = "transaction_date" | "amount";
+type sort_dir = "asc" | "desc";
 export type { CreateTransaction, Query };

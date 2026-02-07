@@ -2,6 +2,7 @@ import { date, unknown } from "zod";
 import { prisma } from "../config/prisma.js";
 import type { CreateTransaction, Query } from "../types/trasnsaction.type.js";
 import { ApiError } from "../utils/ApiError.js";
+import { Prisma } from "../../generated/prisma/client.js";
 
 export const transactionService = {
   async create(userId: bigint, data: CreateTransaction) {
@@ -27,10 +28,25 @@ export const transactionService = {
     });
   },
   async list(userId: bigint, query: Query) {
-    const { month, year, category_id, search, sort = "desc", type } = query;
+    const {
+      month,
+      year,
+      category_id,
+      search,
+      sort_by = "transaction_date",
+      sort_dir = "desc",
+      type,
+    } = query;
 
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 1);
+    const startDate = new Date(Date.UTC(year, month - 1, 1));
+    const endDate = new Date(Date.UTC(year, month, 1));
+
+    const sortDir: Prisma.SortOrder = sort_dir === "asc" ? "asc" : "desc";
+
+    const orderBy: Prisma.TransactionOrderByWithRelationInput[] =
+      sort_by === "amount"
+        ? [{ amount: sort_dir }, { transaction_date: "desc" }]
+        : [{ transaction_date: sort_dir }, { amount: "desc" }];
 
     return prisma.transaction.findMany({
       where: {
@@ -38,16 +54,18 @@ export const transactionService = {
         deleted_at: null,
         transaction_date: {
           gte: startDate,
-          lte: endDate,
+          lt: endDate,
         },
         ...(type && { type }),
-        ...(category_id && { category_id: BigInt(category_id) }),
-        ...(search && { note: { contains: search.toLowerCase() }, category:{name:{contains:search.toLowerCase()}} }),
+        ...(category_id !== undefined ? { category_id: category_id } : {}),
+        ...(search && {
+          OR: [
+            { note: { contains: search.toLowerCase() } },
+            { category: { name: { contains: search.toLowerCase() } } },
+          ],
+        }),
       },
-      orderBy: [
-        {transaction_date: sort},
-        {amount:sort}
-      ],
+      orderBy,
       include: {
         category: {
           select: {
@@ -84,8 +102,8 @@ export const transactionService = {
     if (!year) {
       throw new ApiError(400, "invalid year");
     }
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 1);
+    const startDate = new Date(Date.UTC(year, month - 1, 1));
+    const endDate = new Date(Date.UTC(year, month, 1));
     const [incomeAgg, expenseAgg] = await Promise.all([
       prisma.transaction.aggregate({
         where: {
