@@ -1,6 +1,6 @@
 import { date, unknown } from "zod";
 import { prisma } from "../config/prisma.js";
-import type { CreateTransaction, Query } from "../types/trasnsaction.type.js";
+import type { CreateTransaction, Query, UpdateTransaction } from "../types/trasnsaction.type.js";
 import { ApiError } from "../utils/ApiError.js";
 import { Prisma } from "../../generated/prisma/client.js";
 
@@ -75,6 +75,30 @@ export const transactionService = {
         },
       },
     });
+  },
+  async update(userId:bigint, transactionId:bigint,data:UpdateTransaction){
+    const tx= await prisma.transaction.findFirst({
+      where:{
+        id:transactionId,
+        user_id:userId
+      }
+    })
+    if(!tx){
+      throw new ApiError(404,"transaction not found")
+    }
+    return prisma.transaction.update({
+      where:{
+        id:transactionId
+      },
+      data:{
+        ...(data.type&&{type:data.type}),
+        ...(data.amount&&{amount:data.amount}),
+        ...(data.transaction_date&&{transaction_date:new Date(data.transaction_date)}),
+        ...(data.payment_method&&{payment_method:data.payment_method}),
+        ...(data.category_id&&{category_id:Number(data.category_id)}),
+        ...(data.note&&{note:data.note})
+      }
+    })
   },
   async softDelete(userId: bigint, transactionId: bigint) {
     const tx = await prisma.transaction.findFirst({

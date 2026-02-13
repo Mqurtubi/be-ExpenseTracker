@@ -63,9 +63,10 @@ const listTransaction = async (
     return res.json({
       data: data.map((tx) => ({
         id: tx.id.toString(),
-        date: tx.transaction_date,
+        transaction_date: tx.transaction_date,
         type: tx.type,
         amount: tx.amount,
+        payment_method:tx.payment_method,
         note: tx.note,
         category: {
           id: tx.category.id.toString(),
@@ -77,6 +78,23 @@ const listTransaction = async (
     next(error);
   }
 };
+
+const updateTransaction = async (req:Request,res:Response,next:NextFunction)=>{
+  try {
+    const userId = req.user.id
+    const rawTransactionId = req.params.id
+    if (typeof rawTransactionId !== "string") {
+      throw new ApiError(400, "Invalid transaction id");
+    }
+    const transactionId = BigInt(rawTransactionId);
+    await transactionService.update(userId, transactionId,req.body);
+    return res.json({
+      message: "transaction updated",
+    });
+  } catch (error) {
+    next(error)
+  }
+}
 
 const deleteTransaction = async (
   req: Request,
@@ -99,4 +117,4 @@ const deleteTransaction = async (
     next(error);
   }
 };
-export { createTransaction, listTransaction, deleteTransaction };
+export { createTransaction, listTransaction, updateTransaction, deleteTransaction };
